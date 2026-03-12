@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TheoSheets — Coming Soon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --parchment: #f5f0e8;
+      --ivory: #faf8f5;
+      --warm-brown: #5c4a3d;
+      --warm-brown-light: #7d6b5e;
+      --accent: #8b6914;
+      --accent-soft: #a68b2e;
+      --overlay-dark: rgba(44, 38, 34, 0.75);
+      --overlay-warm: rgba(92, 74, 61, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-weight: 400;
+      color: var(--warm-brown);
+      background: var(--ivory);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Background with sheet music image and overlay */
+    .hero-wrapper {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        var(--overlay-dark) 0%,
+        var(--overlay-warm) 50%,
+        rgba(44, 38, 34, 0.85) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 640px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent-soft);
+      margin-bottom: 1rem;
+    }
+
+    .brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: var(--ivory);
+      margin-bottom: 2rem;
+    }
+
+    .brand-sheets {
+      color: #f0d84c;
+    }
+
+    .headline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 500;
+      line-height: 1.25;
+      color: var(--ivory);
+      margin-bottom: 1.25rem;
+    }
+
+    .subheadline {
+      font-size: 1.1rem;
+      color: rgba(250, 248, 245, 0.9);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      font-weight: 400;
+    }
+
+    /* Form styles */
+    .signup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    @media (min-width: 480px) {
+      .form-row {
+        flex-direction: row;
+      }
+    }
+
+    .email-input {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1rem;
+      color: var(--warm-brown);
+      background: rgba(250, 248, 245, 0.98);
+      border: 1px solid rgba(139, 105, 20, 0.3);
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .email-input::placeholder {
+      color: var(--warm-brown-light);
+    }
+
+    .email-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(139, 105, 20, 0.2);
+    }
+
+    .cta-btn {
+      padding: 1rem 2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--ivory);
+      background: var(--accent);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .cta-btn:hover:not(:disabled) {
+      background: var(--accent-soft);
+      transform: translateY(-1px);
+    }
+
+    .cta-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .form-note {
+      font-size: 0.9rem;
+      color: rgba(250, 248, 245, 0.8);
+      margin-top: 0.5rem;
+    }
+
+    .form-message {
+      font-size: 0.95rem;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .form-message.success {
+      display: block;
+      background: rgba(76, 115, 76, 0.3);
+      color: #d4edda;
+      border: 1px solid rgba(76, 115, 76, 0.5);
+    }
+
+    .form-message.error {
+      display: block;
+      background: rgba(139, 69, 69, 0.3);
+      color: #f8d7da;
+      border: 1px solid rgba(139, 69, 69, 0.5);
+    }
+
+    /* Feature row */
+    .features {
+      padding: 3rem 1.5rem;
+      background: var(--parchment);
+    }
+
+    .features-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 600px) {
+      .features-inner {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 900px) {
+      .features-inner {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .feature-item {
+      text-align: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--warm-brown);
+    }
+
+    /* Footer */
+    footer {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: var(--warm-brown-light);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero-wrapper">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="eyebrow">Coming Soon</p>
+        <h1 class="brand">Theo<span class="brand-sheets">Sheets</span></h1>
+        <h2 class="headline">Beautiful sheet music is coming soon.</h2>
+        <p class="subheadline">
+          Join the TheoSheets early access list for premium scores, accompaniment tracks, MIDI resources, and exclusive launch offers crafted for musicians who value expressive music.
+        </p>
+
+        <form class="signup-form" id="signup-form" novalidate>
+          <div class="form-row">
+            <input
+              type="email"
+              name="email"
+              class="email-input"
+              placeholder="Enter your email"
+              required
+              autocomplete="email"
+              id="email-input"
+            >
+            <button type="submit" class="cta-btn" id="submit-btn">
+              Get Early Access
+            </button>
+          </div>
+          <p class="form-note">
+            Early subscribers receive a complimentary premium score and access to launch-only offers.
+          </p>
+          <div class="form-message" id="form-message" role="status"></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="features-inner">
+        <p class="feature-item">Professional sheet music</p>
+        <p class="feature-item">Orchestral accompaniment tracks</p>
+        <p class="feature-item">MIDI resources for composers</p>
+        <p class="feature-item">Select multitrack recordings</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>© TheoSheets</p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.getElementById('signup-form');
+      const emailInput = document.getElementById('email-input');
+      const submitBtn = document.getElementById('submit-btn');
+      const messageEl = document.getElementById('form-message');
+
+      function setMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'form-message ' + type;
+        messageEl.setAttribute('aria-live', 'polite');
+      }
+
+      function clearMessage() {
+        messageEl.textContent = '';
+        messageEl.className = 'form-message';
+      }
+
+      function setLoading(loading) {
+        submitBtn.disabled = loading;
+        submitBtn.textContent = loading ? 'Subscribing…' : 'Get Early Access';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMessage();
+
+        const email = emailInput.value.trim();
+        if (!email) {
+          setMessage('Please enter your email address.', 'error');
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            setMessage(data.error || 'Something went wrong. Please try again.', 'error');
+            setLoading(false);
+            return;
+          }
+
+          setMessage('Thank you — you are on the TheoSheets early access list.', 'success');
+          form.reset();
+        } catch (err) {
+          setMessage('Unable to connect. Please check your connection and try again.', 'error');
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

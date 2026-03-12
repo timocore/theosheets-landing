@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TheoSheets — Coming Soon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #faf7f2;
+      --paper: #f3efe8;
+      --ink: #2c2622;
+      --ink-muted: #5a524c;
+      --gold: #9a7b4f;
+      --gold-light: #c4a574;
+      --overlay: rgba(44, 38, 34, 0.4);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      font-weight: 400;
+      color: var(--ink);
+      background: var(--cream);
+      min-height: 100vh;
+      line-height: 1.65;
+    }
+
+    /* Hero with subtle sheet music background */
+    .page {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1.5rem;
+      overflow: hidden;
+    }
+
+    .page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1920&q=60');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.12;
+      z-index: 0;
+    }
+
+    .page::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, var(--cream) 0%, rgba(250, 247, 242, 0.97) 100%);
+      z-index: 1;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 0.8rem;
+      font-weight: 400;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .brand {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 2.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .brand-sheets {
+      color: var(--gold);
+      font-style: italic;
+    }
+
+    .headline {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 500;
+      font-style: italic;
+      color: var(--ink-muted);
+      margin-bottom: 1.25rem;
+    }
+
+    .subheadline {
+      font-size: 1.05rem;
+      color: var(--ink-muted);
+      max-width: 500px;
+      margin: 0 auto 1.5rem;
+      line-height: 1.75;
+    }
+
+    .urgency-line {
+      font-size: 0.95rem;
+      color: var(--ink);
+      font-weight: 500;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    /* Card-style form */
+    .form-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 24px rgba(44, 38, 34, 0.08);
+      border: 1px solid rgba(154, 123, 79, 0.2);
+      margin-bottom: 1rem;
+    }
+
+    .signup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    @media (min-width: 440px) {
+      .form-row {
+        flex-direction: row;
+      }
+    }
+
+    .email-input {
+      flex: 1;
+      padding: 1rem 1.25rem;
+      font-family: 'Lora', Georgia, serif;
+      font-size: 1rem;
+      color: var(--ink);
+      background: var(--cream);
+      border: 1px solid rgba(154, 123, 79, 0.25);
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .email-input::placeholder {
+      color: var(--ink-muted);
+      opacity: 0.7;
+    }
+
+    .email-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(154, 123, 79, 0.15);
+    }
+
+    .cta-btn {
+      padding: 1rem 1.75rem;
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: white;
+      background: var(--ink);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .cta-btn:hover:not(:disabled) {
+      background: var(--ink-muted);
+      transform: translateY(-1px);
+    }
+
+    .cta-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .form-note {
+      font-size: 0.875rem;
+      color: var(--ink-muted);
+      margin-top: 0.25rem;
+      line-height: 1.5;
+    }
+
+    .form-message {
+      font-size: 0.9rem;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .form-message.success {
+      display: block;
+      background: rgba(76, 115, 76, 0.12);
+      color: #2d5a2d;
+      border: 1px solid rgba(76, 115, 76, 0.3);
+    }
+
+    .form-message.error {
+      display: block;
+      background: rgba(139, 69, 69, 0.1);
+      color: #8b4545;
+      border: 1px solid rgba(139, 69, 69, 0.25);
+    }
+
+    /* Feature row */
+    .features {
+      padding: 2.5rem 1.5rem 0;
+      margin-top: 2rem;
+      border-top: 1px solid rgba(154, 123, 79, 0.2);
+    }
+
+    .features-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 2rem;
+    }
+
+    .feature-item {
+      text-align: left;
+      font-family: 'Lora', serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--ink-muted);
+    }
+
+    footer {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="page">
+      <div class="content">
+        <!-- 1. Brand / curiosity -->
+        <p class="eyebrow">Coming Soon</p>
+        <h1 class="brand">Theo<span class="brand-sheets">Sheets</span></h1>
+
+        <!-- 2. Clear value -->
+        <h2 class="headline">Beautiful sheet music is coming soon.</h2>
+        <p class="subheadline">
+          TheoSheets brings premium scores, orchestral accompaniment tracks, MIDI resources, and select multitrack recordings to musicians who value expressive music.
+        </p>
+
+        <!-- 3. Why subscribe now / 4. What they get / 5. Gentle urgency -->
+        <p class="urgency-line">
+          Join the early access list and be among the first when we launch. Founding subscribers receive a complimentary premium score and access to launch-only offers—benefits reserved for those who join before the store opens.
+        </p>
+
+        <!-- 6. Simple signup action -->
+        <div class="form-card">
+          <form class="signup-form" id="signup-form" novalidate>
+            <div class="form-row">
+              <input
+                type="email"
+                name="email"
+                class="email-input"
+                placeholder="Enter your email"
+                required
+                autocomplete="email"
+                id="email-input"
+              >
+              <button type="submit" class="cta-btn" id="submit-btn">
+                Get Early Access
+              </button>
+            </div>
+            <p class="form-note">
+              Early access is limited. Founding subscribers receive a complimentary premium score and launch-only offers.
+            </p>
+            <div class="form-message" id="form-message" role="status"></div>
+          </form>
+        </div>
+
+        <section class="features">
+          <div class="features-inner">
+            <p class="feature-item">Professional sheet music</p>
+            <p class="feature-item">Orchestral accompaniment tracks</p>
+            <p class="feature-item">MIDI resources for composers</p>
+            <p class="feature-item">Select multitrack recordings</p>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <footer>
+      <p>© TheoSheets</p>
+    </footer>
+  </main>
+
+  <script>
+    (function () {
+      const form = document.getElementById('signup-form');
+      const emailInput = document.getElementById('email-input');
+      const submitBtn = document.getElementById('submit-btn');
+      const messageEl = document.getElementById('form-message');
+
+      function setMessage(text, type) {
+        messageEl.textContent = text;
+        messageEl.className = 'form-message ' + type;
+        messageEl.setAttribute('aria-live', 'polite');
+      }
+
+      function clearMessage() {
+        messageEl.textContent = '';
+        messageEl.className = 'form-message';
+      }
+
+      function setLoading(loading) {
+        submitBtn.disabled = loading;
+        submitBtn.textContent = loading ? 'Subscribing…' : 'Get Early Access';
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMessage();
+
+        const email = emailInput.value.trim();
+        if (!email) {
+          setMessage('Please enter your email address.', 'error');
+          return;
+        }
+
+        setLoading(true);
+
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            setMessage(data.error || 'Something went wrong. Please try again.', 'error');
+            setLoading(false);
+            return;
+          }
+
+          setMessage('Thank you — you are on the TheoSheets early access list.', 'success');
+          form.reset();
+        } catch (err) {
+          setMessage('Unable to connect. Please check your connection and try again.', 'error');
+        } finally {
+          setLoading(false);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
