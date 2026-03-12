@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<title>TheoSheets</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TheoSheets — Beautiful Sheet Music</title>
 
 <style>
 
 body{
 font-family: Georgia, serif;
-background:#f5f0e6;
+background:#f6f1e7;
 color:#2c2c2c;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
 margin:0;
+display:flex;
+align-items:center;
+justify-content:center;
+min-height:100vh;
 text-align:center;
 }
 
@@ -23,26 +26,36 @@ max-width:700px;
 padding:40px;
 }
 
-h1{
-font-size:48px;
+.logo{
+font-size:52px;
+letter-spacing:2px;
 margin-bottom:10px;
 }
 
-.subtitle{
-font-size:20px;
+.tagline{
+font-size:22px;
 margin-bottom:40px;
+line-height:1.5;
+}
+
+.features{
+margin-top:25px;
+margin-bottom:35px;
+font-size:18px;
+line-height:1.8;
 }
 
 input{
-padding:12px;
+padding:14px;
 font-size:16px;
 width:260px;
 border-radius:6px;
-border:1px solid #ccc;
+border:1px solid #d0c7b7;
+background:white;
 }
 
 button{
-padding:12px 18px;
+padding:14px 20px;
 font-size:16px;
 background:#c8a96a;
 color:white;
@@ -50,25 +63,46 @@ border:none;
 border-radius:6px;
 margin-left:10px;
 cursor:pointer;
+transition:0.2s;
+}
+
+button:hover{
+background:#b89a5d;
 }
 
 .note{
 margin-top:30px;
-font-size:14px;
-opacity:0.7;
+font-size:15px;
+opacity:0.75;
+}
+
+.footer{
+margin-top:60px;
+font-size:13px;
+opacity:0.6;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-<h1>TheoSheets</h1>
+<div class="logo">
+TheoSheets
+</div>
 
-<div class="subtitle">
-Beautiful sheet music for real musicians
+<div class="tagline">
+Beautiful sheet music crafted for musicians who love expressive music.
+</div>
+
+<div class="features">
+• Professional sheet music<br>
+• Orchestral accompaniment tracks<br>
+• MIDI resources for composers<br>
+• Select multitrack recordings
 </div>
 
 <form>
@@ -77,7 +111,11 @@ Beautiful sheet music for real musicians
 </form>
 
 <div class="note">
-First 100 subscribers receive a FREE premium score.
+Early subscribers receive a complimentary premium score and launch discounts.
+</div>
+
+<div class="footer">
+© 2026 TheoSheets
 </div>
 
 </div>
