@@ -1,6 +1,7 @@
 {
   "name": "theosheets-landing",
   "version": "1.0.0",
+  "type": "module",
   "description": "TheoSheets pre-launch landing page",
   "private": true,
   "dependencies": {

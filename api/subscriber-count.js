@@ -5,8 +5,12 @@
  * Requires Upstash Redis (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN).
  */
 
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env.local') });
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 const FOUNDING_LIMIT = 300;
 const REDIS_KEY = 'theosheets:subscriber_count';
@@ -24,7 +28,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { Redis } = require('@upstash/redis');
+    const { Redis } = await import('@upstash/redis');
     const redis = Redis.fromEnv();
     const count = await redis.get(REDIS_KEY);
     const num = typeof count === 'number' ? count : parseInt(String(count || '0'), 10) || 0;
