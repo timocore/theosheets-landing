@@ -1,80 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>TheoSheets — Beautiful Sheet Music</title>
+<title>TheoSheets — Coming Soon</title>
 
 <style>
 
-body{
-font-family: Georgia, serif;
-background:#f6f1e7;
-color:#2c2c2c;
+:root{
+--accent:#c8a96a;
+--accent-hover:#b69454;
+--text:#ffffff;
+}
+
+*{
+box-sizing:border-box;
 margin:0;
+padding:0;
+}
+
+body{
+font-family: Georgia, "Times New Roman", serif;
+color:var(--text);
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+/* HERO BACKGROUND */
+
+.hero{
+
+position:relative;
+min-height:100vh;
+
+background:
+linear-gradient(
+rgba(15,13,10,0.65),
+rgba(15,13,10,0.75)
+),
+
+radial-gradient(
+circle at 20% 20%,
+rgba(200,169,106,0.25),
+transparent 40%
+),
+
+url("https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1800&q=80");
+
+background-size:cover;
+background-position:center;
 display:flex;
 align-items:center;
 justify-content:center;
-min-height:100vh;
-text-align:center;
-}
-
-.container{
-max-width:700px;
 padding:40px;
 }
 
+/* subtle blur layer */
+
+.hero::after{
+content:"";
+position:absolute;
+inset:0;
+backdrop-filter: blur(2px);
+}
+
+/* CONTENT */
+
+.hero-inner{
+position:relative;
+z-index:2;
+text-align:center;
+max-width:850px;
+}
+
 .logo{
-font-size:52px;
-letter-spacing:2px;
-margin-bottom:10px;
-}
-
-.tagline{
 font-size:22px;
-margin-bottom:40px;
-line-height:1.5;
+letter-spacing:0.2em;
+margin-bottom:35px;
+opacity:0.9;
 }
 
-.features{
-margin-top:25px;
-margin-bottom:35px;
-font-size:18px;
-line-height:1.8;
+.logo span{
+color:var(--accent);
+}
+
+.eyebrow{
+text-transform:uppercase;
+letter-spacing:0.2em;
+font-size:12px;
+opacity:0.8;
+margin-bottom:20px;
+}
+
+h1{
+font-size:clamp(3rem,6vw,5.5rem);
+line-height:1.05;
+font-weight:500;
+margin-bottom:20px;
+}
+
+.subtitle{
+font-size:clamp(1.1rem,2vw,1.4rem);
+line-height:1.7;
+max-width:720px;
+margin:0 auto 40px auto;
+opacity:0.9;
+}
+
+/* FORM */
+
+form{
+display:flex;
+justify-content:center;
+gap:12px;
+flex-wrap:wrap;
 }
 
 input{
-padding:14px;
+padding:16px 18px;
+border-radius:12px;
+border:none;
+min-width:280px;
 font-size:16px;
-width:260px;
-border-radius:6px;
-border:1px solid #d0c7b7;
-background:white;
+outline:none;
 }
 
 button{
-padding:14px 20px;
-font-size:16px;
-background:#c8a96a;
-color:white;
+padding:16px 24px;
 border:none;
-border-radius:6px;
-margin-left:10px;
+border-radius:12px;
+background:var(--accent);
+color:white;
+font-size:16px;
+font-weight:600;
 cursor:pointer;
 transition:0.2s;
 }
 
 button:hover{
-background:#b89a5d;
+background:var(--accent-hover);
+transform:translateY(-1px);
 }
 
+/* SMALL NOTE */
+
 .note{
-margin-top:30px;
-font-size:15px;
-opacity:0.75;
+margin-top:18px;
+font-size:14px;
+opacity:0.8;
 }
+
+/* FEATURES */
+
+.features{
+margin-top:60px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+max-width:900px;
+margin-left:auto;
+margin-right:auto;
+}
+
+.feature{
+font-size:15px;
+opacity:0.9;
+}
+
+/* FOOTER */
 
 .footer{
 margin-top:60px;
@@ -82,36 +176,69 @@ font-size:13px;
 opacity:0.6;
 }
 
-</style>
+/* MOBILE */
 
+@media(max-width:800px){
+
+.features{
+grid-template-columns:1fr 1fr;
+}
+
+}
+
+@media(max-width:500px){
+
+.features{
+grid-template-columns:1fr;
+}
+
+input{
+width:100%;
+}
+
+button{
+width:100%;
+}
+
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="container">
+<section class="hero">
+
+<div class="hero-inner">
 
 <div class="logo">
-TheoSheets
+Theo<span>Sheets</span>
 </div>
 
-<div class="tagline">
-Beautiful sheet music crafted for musicians who love expressive music.
-</div>
+<div class="eyebrow">Coming Soon</div>
 
-<div class="features">
-• Professional sheet music<br>
-• Orchestral accompaniment tracks<br>
-• MIDI resources for composers<br>
-• Select multitrack recordings
-</div>
+<h1>Beautiful sheet music is coming soon.</h1>
+
+<p class="subtitle">
+Join the TheoSheets early access list for premium scores,
+orchestral accompaniment tracks, MIDI resources,
+and exclusive launch offers crafted for expressive musicians.
+</p>
 
 <form>
-<input type="email" placeholder="Enter your email">
+<input type="email" placeholder="Enter your email address">
 <button>Get Early Access</button>
 </form>
 
 <div class="note">
-Early subscribers receive a complimentary premium score and launch discounts.
+Early subscribers receive a complimentary premium score and launch offers.
+</div>
+
+<div class="features">
+<div class="feature">Professional Sheet Music</div>
+<div class="feature">Orchestral Accompaniment</div>
+<div class="feature">MIDI Resources</div>
+<div class="feature">Multitrack Recordings</div>
 </div>
 
 <div class="footer">
@@ -119,6 +246,8 @@ Early subscribers receive a complimentary premium score and launch discounts.
 </div>
 
 </div>
+
+</section>
 
 </body>
 </html>
