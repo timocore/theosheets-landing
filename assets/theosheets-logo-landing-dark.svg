@@ -1,0 +1,27 @@
+<svg width="360" height="80" viewBox="0 0 360 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,700;1,700&amp;display=swap');
+      
+      .logo-text {
+        font-family: 'Libre Baskerville', serif;
+        font-size: 44px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+      
+      .logo-theo {
+        fill: #2f2a25;
+      }
+      
+      .logo-sheets {
+        fill: #9a7b4f;
+        font-style: italic;
+      }
+    </style>
+  </defs>
+  
+  <text x="180" y="52" text-anchor="middle" class="logo-text">
+    <tspan class="logo-theo">Theo</tspan><tspan class="logo-sheets">Sheets</tspan>
+  </text>
+</svg>
