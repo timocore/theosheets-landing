@@ -1,12 +1,13 @@
 /**
  * TheoSheets Unsubscribe API
  * GET /api/unsubscribe?token=xxx
- * Marks a subscriber as unsubscribed in Redis and redirects to the landing page.
+ * Marks a subscriber as unsubscribed in Upstash first, then in Resend.
  */
 
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import { Resend } from 'resend';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
@@ -62,6 +63,26 @@ export default async function handler(req, res) {
     }
 
     await redis.del(`${UNSUBSCRIBE_TOKEN_PREFIX}${token}`);
+
+    // Sync unsubscribed status to Resend (best-effort; Upstash is source of truth)
+    const apiKey = process.env.RESEND_API_KEY;
+    if (apiKey) {
+      try {
+        const resend = new Resend(apiKey);
+        const { error } = await resend.contacts.update({
+          email,
+          unsubscribed: true,
+        });
+        if (error) {
+          console.error('Resend contact unsubscribe sync failed:', error);
+        } else {
+          console.log('Resend contact marked unsubscribed:', email);
+        }
+      } catch (err) {
+        console.error('Resend contact unsubscribe sync exception:', err);
+      }
+    }
+
     return res.redirect(302, `${getLandingBaseUrl()}/?unsubscribed=ok`);
   } catch (err) {
     console.error('Unsubscribe error:', err);
