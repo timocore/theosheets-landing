@@ -5,8 +5,8 @@
 ```
 /
 ├── index.html           # Landing page
-├── welcome-email.html   # Welcome email template (founding list)
 ├── api/
+│   ├── welcome-email.html  # Welcome email template (founding list)
 │   ├── subscribe.mjs    # Email signup serverless function
 │   ├── unsubscribe.mjs  # Unsubscribe handler (GET ?token=xxx)
 │   └── subscriber-count.mjs

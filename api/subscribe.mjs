@@ -163,11 +163,22 @@ export default async function handler(req, res) {
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${token}`;
 
       let html;
-      try {
-        html = readFileSync(path.join(__dirname, '..', 'welcome-email.html'), 'utf8');
-        html = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
-      } catch (readErr) {
-        console.warn('Could not read welcome-email.html, using fallback:', readErr.message);
+      const templatePaths = [
+        path.join(__dirname, 'welcome-email.html'),
+        path.join(process.cwd(), 'api', 'welcome-email.html'),
+        path.join(process.cwd(), 'welcome-email.html'),
+      ];
+      for (const templatePath of templatePaths) {
+        try {
+          html = readFileSync(templatePath, 'utf8');
+          html = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
+          break;
+        } catch (readErr) {
+          continue;
+        }
+      }
+      if (!html) {
+        console.warn('Could not read welcome-email.html from any path, using fallback');
         html = `
           <p>Thank you for joining the TheoSheets founding list.</p>
           <p>As an early subscriber, you will receive a complimentary premium score and lifetime Founding Musician recognition when TheoSheets launches.</p>
