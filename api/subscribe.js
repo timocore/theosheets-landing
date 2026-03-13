@@ -604,6 +604,54 @@ export default async function handler(req, res) {
   const resend = new Resend(apiKey);
   const idempotencyKey = `subscribe/${Date.now()}-${email.replace(/[^a-z0-9]/g, '')}`;
 
+  // 1. Sync contact to Resend (new signups only; best-effort)
+  if (isNew && apiKey) {
+    try {
+      let contactPayload = {
+        email,
+        unsubscribed: false,
+        properties: {
+          created_at: now,
+          spot_number: spotNumber != null ? String(spotNumber) : '',
+        },
+      };
+      let contactRes = await fetch('https://api.resend.com/contacts', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactPayload),
+      });
+      if (!contactRes.ok && contactPayload.properties) {
+        delete contactPayload.properties;
+        contactRes = await fetch('https://api.resend.com/contacts', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(contactPayload),
+        });
+      }
+      if (contactRes.ok) {
+        const contactData = await contactRes.json();
+        console.log('[subscribe] Resend contact synced:', contactData?.id, email);
+      } else {
+        const errBody = await contactRes.text();
+        console.error('[subscribe] Resend contact sync failed:', contactRes.status, errBody);
+      }
+    } catch (err) {
+      console.error('[subscribe] Resend contact sync exception:', err);
+    }
+  }
+
+  // 2. Delay to avoid Resend rate limit (2 req/s) before sending welcome email
+  if (isNew && apiKey) {
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+  }
+
+  // 3. Send welcome email
   if (isNew && apiKey && emailFrom) {
     try {
       const baseUrl = getLandingBaseUrl();
