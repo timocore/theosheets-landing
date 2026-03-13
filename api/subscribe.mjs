@@ -8,7 +8,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-import { WELCOME_EMAIL_HTML } from './welcome-email-template.mjs';
+import { WELCOME_EMAIL_HTML, WELCOME_EMAIL_TEXT } from './welcome-email-template.mjs';
 import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
@@ -119,17 +119,23 @@ export default async function handler(req, res) {
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${token}`;
 
       const html = WELCOME_EMAIL_HTML.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
+      const text = WELCOME_EMAIL_TEXT.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
 
-      const { error: welcomeError } = await resend.emails.send({
-        from: emailFrom,
-        to: [email],
-        subject: "You're on the TheoSheets founding list",
-        html,
-        idempotencyKey: `${idempotencyKey}-welcome`,
-      });
+      if (!html || html.length < 100) {
+        console.error('Welcome email HTML invalid or empty, aborting send');
+      } else {
+        const { error: welcomeError } = await resend.emails.send({
+          from: emailFrom,
+          to: [email],
+          subject: "You're on the TheoSheets founding list",
+          html,
+          text,
+          idempotencyKey: `${idempotencyKey}-welcome`,
+        });
 
-      if (welcomeError) {
-        console.error('Welcome email failed:', JSON.stringify(welcomeError, null, 2));
+        if (welcomeError) {
+          console.error('Welcome email failed:', JSON.stringify(welcomeError, null, 2));
+        }
       }
     } catch (err) {
       console.error('Welcome email failed:', err);

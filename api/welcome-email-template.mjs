@@ -2,6 +2,31 @@
  * Inlined welcome email template - no file I/O needed at runtime.
  * Placeholder: {{UNSUBSCRIBE_URL}}
  */
+
+export const WELCOME_EMAIL_TEXT = `TheoSheets
+Expressive Piano Editions
+
+Welcome to the TheoSheets Founding List
+
+Thank you for joining the TheoSheets founding list.
+
+Your place is confirmed, and you are now part of the early circle of musicians who will receive first access when the TheoSheets collection is released.
+
+Founding Members Will Receive:
+- Early access to the collection
+- A complimentary premium score
+- Lifetime Founding Musician recognition on TheoSheets
+
+Thank you for joining before launch. It means a great deal to begin in the company of musicians who care about expressive, carefully crafted editions.
+
+With thanks,
+Theo Timoc
+Composer & Creator of TheoSheets
+
+We'll only send occasional updates about the TheoSheets launch.
+
+Unsubscribe: {{UNSUBSCRIBE_URL}}`;
+
 export const WELCOME_EMAIL_HTML = `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
