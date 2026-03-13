@@ -3,6 +3,8 @@
  * Vercel serverless function — POST only
  * Stores subscribers in Upstash. Sends branded founding-list welcome email.
  * Uses inlined WELCOME_EMAIL_HTML (no file I/O). Resend contact sync disabled.
+ *
+ * NOTE: Using .js (not .mjs) for reliable Vercel /api/subscribe routing.
  */
 
 import path from 'path';
@@ -80,7 +82,7 @@ export default async function handler(req, res) {
       };
 
       await redis.set(subscriberKey, JSON.stringify(subscriber));
-      await redis.set(`${UNSUBSCRIBE_TOKEN_PREFIX}${unsubscribeToken}`, email, { ex: 60 * 60 * 24 * 365 }); // 1 year TTL
+      await redis.set(`${UNSUBSCRIBE_TOKEN_PREFIX}${unsubscribeToken}`, email, { ex: 60 * 60 * 24 * 365 });
       await redis.sadd(SUBSCRIBER_EMAILS_KEY, email);
       isNew = true;
     } else {
@@ -106,11 +108,6 @@ export default async function handler(req, res) {
   const emailFrom = process.env.EMAIL_FROM;
   const resend = new Resend(apiKey);
   const idempotencyKey = `subscribe/${Date.now()}-${email.replace(/[^a-z0-9]/g, '')}`;
-
-  // NOTE: Resend contact sync is disabled here. Adding contacts to Resend Audience
-  // can trigger an automatic welcome email (configured in Resend dashboard). We send
-  // our own welcome-email.html instead. To sync contacts for Broadcasts, add them
-  // manually or re-enable after disabling any Resend automations.
 
   if (isNew && apiKey && emailFrom) {
     try {
