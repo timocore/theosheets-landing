@@ -33,7 +33,9 @@ Composer & Creator of TheoSheets
 
 We'll only send occasional updates about the TheoSheets launch.
 
-Unsubscribe: {{UNSUBSCRIBE_URL}}`;
+Unsubscribe: {{UNSUBSCRIBE_URL}}
+
+TheoSheets Founding List Marker: V3`;
 
 const WELCOME_EMAIL_HTML = `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
@@ -88,6 +90,7 @@ const WELCOME_EMAIL_HTML = `<!DOCTYPE html>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse: collapse">
               <tr><td align="center" class="footer-copy" style="padding: 38px 0 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: 13px; line-height: 24px; color: #8a7b69;">We&rsquo;ll only send occasional updates about the TheoSheets launch.</td></tr>
               <tr><td align="center" style="padding: 12px 0 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: 12px; line-height: 20px; color: #9b8b77;"><a href="{{UNSUBSCRIBE_URL}}" style="color: #9b8b77; text-decoration: underline;">Unsubscribe</a></td></tr>
+              <tr><td align="center" style="padding: 18px 0 0 0; font-family: Georgia, 'Times New Roman', serif; font-size: 11px; line-height: 18px; color: #9b8b77;">TheoSheets Founding List Marker: V3</td></tr>
             </table>
           </td></tr>
           <tr><td align="center" style="padding: 18px 24px 0 24px; font-family: Georgia, 'Times New Roman', serif; font-size: 12px; line-height: 20px; color: #9b8b77;">TheoSheets &middot; Expressive Piano Editions</td></tr>
@@ -113,6 +116,7 @@ function getLandingBaseUrl() {
 }
 
 export default async function handler(req, res) {
+  console.log('[subscribe] Request received:', req.method);
   res.setHeader('Content-Type', 'application/json');
 
   if (req.method !== 'POST') {
