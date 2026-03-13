@@ -201,8 +201,12 @@ export default async function handler(req, res) {
       const html = WELCOME_EMAIL_HTML.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
       const text = WELCOME_EMAIL_TEXT.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
 
-      if (!html || html.length < 100) {
-        console.error('Welcome email HTML invalid or empty, aborting send');
+      // Debug: verify we're sending the premium HTML (not fallback)
+      const htmlValid = html && html.length > 100 && html.startsWith('<!DOCTYPE');
+      console.log('[subscribe] Welcome email: html length=', html?.length ?? 0, 'htmlValid=', htmlValid, 'startsWith=', html?.substring(0, 50));
+
+      if (!htmlValid) {
+        console.error('[subscribe] Welcome email HTML invalid or empty, aborting send');
       } else {
         const { error: welcomeError } = await resend.emails.send({
           from: emailFrom,
@@ -214,7 +218,9 @@ export default async function handler(req, res) {
         });
 
         if (welcomeError) {
-          console.error('Welcome email failed:', JSON.stringify(welcomeError, null, 2));
+          console.error('[subscribe] Welcome email failed:', JSON.stringify(welcomeError, null, 2));
+        } else {
+          console.log('[subscribe] Welcome email sent successfully to', email);
         }
       }
     } catch (err) {
