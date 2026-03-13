@@ -7,8 +7,8 @@
 
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync } from 'fs';
 import crypto from 'crypto';
+import { WELCOME_EMAIL_HTML } from './welcome-email-template.mjs';
 import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
@@ -107,54 +107,10 @@ export default async function handler(req, res) {
   const resend = new Resend(apiKey);
   const idempotencyKey = `subscribe/${Date.now()}-${email.replace(/[^a-z0-9]/g, '')}`;
 
-  // Store contact in Resend only for new signups.
-  if (isNew && apiKey) {
-    try {
-      let contactPayload = {
-        email,
-        unsubscribed: false,
-        properties: {
-          created_at: now,
-          spot_number: spotNumber != null ? String(spotNumber) : '',
-        },
-      };
-      let contactRes = await fetch('https://api.resend.com/contacts', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contactPayload),
-      });
-      // If properties fail (e.g. custom property not created), retry without them
-      if (!contactRes.ok && contactPayload.properties) {
-        delete contactPayload.properties;
-        contactRes = await fetch('https://api.resend.com/contacts', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(contactPayload),
-        });
-      }
-      if (contactRes.ok) {
-        const contactData = await contactRes.json();
-        console.log('Resend contact synced:', contactData?.id, email);
-      } else {
-        const errBody = await contactRes.text();
-        console.error('Resend contact sync failed:', contactRes.status, errBody);
-      }
-    } catch (err) {
-      console.error('Resend contact sync failed:', err);
-    }
-  } else if (isNew) {
-    console.warn('Skipping Resend contact sync: RESEND_API_KEY is not configured');
-  }
-
-  if (isNew && apiKey) {
-    await new Promise((resolve) => setTimeout(resolve, 1100));
-  }
+  // NOTE: Resend contact sync is disabled here. Adding contacts to Resend Audience
+  // can trigger an automatic welcome email (configured in Resend dashboard). We send
+  // our own welcome-email.html instead. To sync contacts for Broadcasts, add them
+  // manually or re-enable after disabling any Resend automations.
 
   if (isNew && apiKey && emailFrom) {
     try {
@@ -162,29 +118,7 @@ export default async function handler(req, res) {
       const token = subscriber?.unsubscribe_token || crypto.randomBytes(24).toString('hex');
       const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${token}`;
 
-      let html;
-      const templatePaths = [
-        path.join(__dirname, 'welcome-email.html'),
-        path.join(process.cwd(), 'api', 'welcome-email.html'),
-        path.join(process.cwd(), 'welcome-email.html'),
-      ];
-      for (const templatePath of templatePaths) {
-        try {
-          html = readFileSync(templatePath, 'utf8');
-          html = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
-          break;
-        } catch (readErr) {
-          continue;
-        }
-      }
-      if (!html) {
-        console.warn('Could not read welcome-email.html from any path, using fallback');
-        html = `
-          <p>Thank you for joining the TheoSheets founding list.</p>
-          <p>As an early subscriber, you will receive a complimentary premium score and lifetime Founding Musician recognition when TheoSheets launches.</p>
-          <p><a href="${unsubscribeUrl}" style="color: #9b8b77;">Unsubscribe</a></p>
-        `;
-      }
+      const html = WELCOME_EMAIL_HTML.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
 
       const { error: welcomeError } = await resend.emails.send({
         from: emailFrom,
