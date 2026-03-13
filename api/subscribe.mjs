@@ -1,8 +1,8 @@
 /**
  * TheoSheets Email Signup API
  * Vercel serverless function — POST only
- * Stores subscribers in Upstash and syncs welcome/contact data via Resend.
- * Sends welcome-email.html template for new signups.
+ * Stores subscribers in Upstash. Sends branded founding-list welcome email.
+ * Uses inlined WELCOME_EMAIL_HTML (no file I/O). Resend contact sync disabled.
  */
 
 import path from 'path';
