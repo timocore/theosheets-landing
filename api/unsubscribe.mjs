@@ -7,7 +7,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { Resend } from 'resend';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
@@ -68,18 +67,23 @@ export default async function handler(req, res) {
     const apiKey = process.env.RESEND_API_KEY;
     if (apiKey) {
       try {
-        const resend = new Resend(apiKey);
-        const { error } = await resend.contacts.update({
-          email,
-          unsubscribed: true,
+        const encodedEmail = encodeURIComponent(email);
+        const res = await fetch(`https://api.resend.com/contacts/${encodedEmail}`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ unsubscribed: true }),
         });
-        if (error) {
-          console.error('Resend contact unsubscribe sync failed:', error);
+        if (res.ok) {
+          console.log('[unsubscribe] Resend contact marked unsubscribed:', email);
         } else {
-          console.log('Resend contact marked unsubscribed:', email);
+          const errBody = await res.text();
+          console.error('[unsubscribe] Resend contact update failed:', res.status, errBody);
         }
       } catch (err) {
-        console.error('Resend contact unsubscribe sync exception:', err);
+        console.error('[unsubscribe] Resend contact update exception:', err);
       }
     }
 
