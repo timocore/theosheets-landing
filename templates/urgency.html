@@ -323,10 +323,15 @@
 
   <script>
     (function () {
+      console.log('[TheoSheets] Signup script loaded (urgency)');
       const form = document.getElementById('signup-form');
       const emailInput = document.getElementById('email-input');
       const submitBtn = document.getElementById('submit-btn');
       const messageEl = document.getElementById('form-message');
+
+      if (!form || !emailInput || !submitBtn || !messageEl) {
+        console.error('[TheoSheets] Form elements missing:', { form: !!form, emailInput: !!emailInput, submitBtn: !!submitBtn, messageEl: !!messageEl });
+      }
 
       function setMessage(text, type) {
         messageEl.textContent = text;
@@ -344,41 +349,52 @@
         submitBtn.textContent = loading ? 'Subscribing…' : 'Get Early Access';
       }
 
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        clearMessage();
+      if (form) {
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          console.log('[TheoSheets] submit started');
+          clearMessage();
 
-        const email = emailInput.value.trim();
-        if (!email) {
-          setMessage('Please enter your email address.', 'error');
-          return;
-        }
-
-        setLoading(true);
-
-        try {
-          const res = await fetch('/api/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email }),
-          });
-
-          const data = await res.json();
-
-          if (!res.ok) {
-            setMessage(data.error || 'Something went wrong. Please try again.', 'error');
-            setLoading(false);
+          const email = emailInput.value.trim();
+          console.log('[TheoSheets] submitted email:', email);
+          if (!email) {
+            setMessage('Please enter your email address.', 'error');
             return;
           }
 
-          setMessage('Thank you — you are on the TheoSheets early access list.', 'success');
-          form.reset();
-        } catch (err) {
-          setMessage('Unable to connect. Please check your connection and try again.', 'error');
-        } finally {
-          setLoading(false);
-        }
-      });
+          setLoading(true);
+
+          const url = window.location.origin + '/api/subscribe';
+          const method = 'POST';
+          console.log('[TheoSheets] fetch URL:', url);
+          console.log('[TheoSheets] fetch method:', method);
+
+          try {
+            const res = await fetch(url, {
+              method: method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: email }),
+            });
+
+            console.log('[TheoSheets] response status:', res.status);
+            const data = await res.json();
+
+            if (!res.ok) {
+              setMessage(data.error || 'Something went wrong. Please try again.', 'error');
+              setLoading(false);
+              return;
+            }
+
+            setMessage('Thank you — you are on the TheoSheets early access list.', 'success');
+            form.reset();
+          } catch (err) {
+            console.error('[TheoSheets] fetch error:', err);
+            setMessage('Unable to connect. Please check your connection and try again.', 'error');
+          } finally {
+            setLoading(false);
+          }
+        });
+      }
     })();
   </script>
 </body>
