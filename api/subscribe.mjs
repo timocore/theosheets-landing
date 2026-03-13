@@ -1,11 +1,14 @@
 /**
  * TheoSheets Email Signup API
  * Vercel serverless function — POST only
- * Sends notification to owner and welcome email to subscriber via Resend
+ * Stores subscribers in Upstash and syncs welcome/contact data via Resend.
+ * Sends welcome-email.html template for new signups.
  */
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readFileSync } from 'fs';
+import crypto from 'crypto';
 import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
@@ -14,6 +17,15 @@ dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 // Simple RFC 5322–compliant email regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const SUBSCRIBER_COUNT_KEY = 'theosheets:subscriber_count';
+const SUBSCRIBER_EMAILS_KEY = 'theosheets:subscriber_emails';
+const UNSUBSCRIBE_TOKEN_PREFIX = 'theosheets:unsubscribe:';
+
+function getLandingBaseUrl() {
+  if (process.env.LANDING_URL) return process.env.LANDING_URL.replace(/\/$/, '');
+  const vercel = process.env.VERCEL_URL;
+  return vercel ? `https://${vercel}` : 'http://localhost:3000';
+}
 
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
@@ -22,12 +34,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.RESEND_API_KEY;
-  const emailFrom = process.env.EMAIL_FROM;
-  const emailTo = process.env.EMAIL_TO;
-
-  if (!apiKey || !emailFrom || !emailTo) {
-    console.error('Missing required env: RESEND_API_KEY, EMAIL_FROM, or EMAIL_TO');
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    console.error('Missing required env: UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN');
     return res.status(500).json({ error: 'Server configuration error' });
   }
 
@@ -38,89 +46,79 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
 
-  const email = (body?.email || '').trim().toLowerCase();
+  const email = normalizeEmail(body?.email || '');
   if (!email || !EMAIL_REGEX.test(email)) {
     return res.status(400).json({ error: 'Please provide a valid email address' });
   }
 
+  const { Redis } = await import('@upstash/redis');
+  const redis = Redis.fromEnv();
+  const subscriberKey = getSubscriberKey(email);
+  const now = new Date().toISOString();
+  let subscriber = null;
+  let spotNumber = null;
+  let isNew = false;
+
+  try {
+    const existing = await redis.get(subscriberKey);
+
+    if (typeof existing === 'string') {
+      subscriber = parseStoredSubscriber(existing);
+    } else if (existing && typeof existing === 'object') {
+      subscriber = existing;
+    }
+
+    if (!subscriber) {
+      spotNumber = await redis.incr(SUBSCRIBER_COUNT_KEY);
+      const unsubscribeToken = crypto.randomBytes(24).toString('hex');
+      subscriber = {
+        email,
+        created_at: now,
+        spot_number: spotNumber,
+        founding_musician_eligible: true,
+        unsubscribe_token: unsubscribeToken,
+      };
+
+      await redis.set(subscriberKey, JSON.stringify(subscriber));
+      await redis.set(`${UNSUBSCRIBE_TOKEN_PREFIX}${unsubscribeToken}`, email, { ex: 60 * 60 * 24 * 365 }); // 1 year TTL
+      await redis.sadd(SUBSCRIBER_EMAILS_KEY, email);
+      isNew = true;
+    } else {
+      spotNumber = Number(subscriber.spot_number) || null;
+
+      if (subscriber.founding_musician_eligible !== true) {
+        subscriber.founding_musician_eligible = true;
+        await redis.set(subscriberKey, JSON.stringify(subscriber));
+      }
+      if (!subscriber.unsubscribe_token) {
+        const unsubscribeToken = crypto.randomBytes(24).toString('hex');
+        subscriber.unsubscribe_token = unsubscribeToken;
+        await redis.set(subscriberKey, JSON.stringify(subscriber));
+        await redis.set(`${UNSUBSCRIBE_TOKEN_PREFIX}${unsubscribeToken}`, email, { ex: 60 * 60 * 24 * 365 });
+      }
+    }
+  } catch (err) {
+    console.error('Upstash subscriber save failed:', err);
+    return res.status(500).json({ error: 'Unable to process signup right now.' });
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
+  const emailFrom = process.env.EMAIL_FROM;
   const resend = new Resend(apiKey);
   const idempotencyKey = `subscribe/${Date.now()}-${email.replace(/[^a-z0-9]/g, '')}`;
 
-  // 1. Send notification email to owner
-  const { error: notifyError } = await resend.emails.send({
-    from: emailFrom,
-    to: [emailTo],
-    subject: 'New TheoSheets subscriber',
-    html: `
-      <p>A new subscriber has joined the TheoSheets early access list.</p>
-      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-    `,
-    idempotencyKey: `${idempotencyKey}-notify`,
-  });
-
-  if (notifyError) {
-    console.error('Notification email failed:', notifyError);
-    // Continue — we still want to send the welcome email
-  }
-
-  // 2. Send welcome email to subscriber
-  const { data, error: welcomeError } = await resend.emails.send({
-    from: emailFrom,
-    to: [email],
-    subject: "You're on the TheoSheets early access list",
-    html: `
-      <p>Thank you for joining the TheoSheets early access list.</p>
-      <p>You're now among the founding subscribers—musicians who will be first to know when we launch and first to access our collection of premium scores, accompaniment tracks, and resources.</p>
-      <p>As a founding subscriber, you will receive:</p>
-      <ul>
-        <li>A complimentary premium score</li>
-        <li>Launch-only offers reserved for early subscribers</li>
-        <li>First access to TheoSheets releases when the store opens</li>
-      </ul>
-      <p>We look forward to sharing more with you soon.</p>
-    `,
-    idempotencyKey: `${idempotencyKey}-welcome`,
-  });
-
-  if (welcomeError) {
-    console.error('Welcome email failed:', welcomeError);
-    return res.status(500).json({
-      error: 'Unable to complete signup. Please try again later.',
-    });
-  }
-
-  // Increment subscriber count in Redis and get spot number
-  let spotNumber = null;
-  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
-  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (redisUrl && redisToken) {
+  // Store contact in Resend only for new signups.
+  if (isNew && apiKey) {
     try {
-      const { Redis } = await import('@upstash/redis');
-      const redis = Redis.fromEnv();
-      spotNumber = await redis.incr('theosheets:subscriber_count');
-    } catch (err) {
-      console.error('Redis increment failed:', err);
-    }
-  }
-
-  // Store contact in Resend (view at resend.com/audience)
-  try {
-    let contactPayload = { email, unsubscribed: false };
-    if (spotNumber != null) {
-      contactPayload.properties = { spot_number: String(spotNumber) };
-    }
-    let contactRes = await fetch('https://api.resend.com/contacts', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(contactPayload),
-    });
-    // If properties fail (e.g. custom property not created), retry without
-    if (!contactRes.ok && contactPayload.properties) {
-      delete contactPayload.properties;
-      contactRes = await fetch('https://api.resend.com/contacts', {
+      let contactPayload = {
+        email,
+        unsubscribed: false,
+        properties: {
+          created_at: now,
+          spot_number: spotNumber != null ? String(spotNumber) : '',
+        },
+      };
+      let contactRes = await fetch('https://api.resend.com/contacts', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -128,17 +126,74 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify(contactPayload),
       });
+      // If properties fail (e.g. custom property not created), retry without them
+      if (!contactRes.ok && contactPayload.properties) {
+        delete contactPayload.properties;
+        contactRes = await fetch('https://api.resend.com/contacts', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(contactPayload),
+        });
+      }
+      if (contactRes.ok) {
+        const contactData = await contactRes.json();
+        console.log('Resend contact synced:', contactData?.id, email);
+      } else {
+        const errBody = await contactRes.text();
+        console.error('Resend contact sync failed:', contactRes.status, errBody);
+      }
+    } catch (err) {
+      console.error('Resend contact sync failed:', err);
     }
-    if (!contactRes.ok) {
-      const errBody = await contactRes.text();
-      console.error('Resend contact creation failed:', contactRes.status, errBody);
-    }
-  } catch (err) {
-    console.error('Resend contact creation failed:', err);
-    // Don't fail the request — welcome email already sent
+  } else if (isNew) {
+    console.warn('Skipping Resend contact sync: RESEND_API_KEY is not configured');
   }
 
-  return res.status(200).json({ success: true, id: data?.id });
+  if (isNew && apiKey) {
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+  }
+
+  if (isNew && apiKey && emailFrom) {
+    try {
+      const baseUrl = getLandingBaseUrl();
+      const token = subscriber?.unsubscribe_token || crypto.randomBytes(24).toString('hex');
+      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${token}`;
+
+      let html;
+      try {
+        html = readFileSync(path.join(__dirname, '..', 'welcome-email.html'), 'utf8');
+        html = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl);
+      } catch (readErr) {
+        console.warn('Could not read welcome-email.html, using fallback:', readErr.message);
+        html = `
+          <p>Thank you for joining the TheoSheets founding list.</p>
+          <p>As an early subscriber, you will receive a complimentary premium score and lifetime Founding Musician recognition when TheoSheets launches.</p>
+          <p><a href="${unsubscribeUrl}" style="color: #9b8b77;">Unsubscribe</a></p>
+        `;
+      }
+
+      const { error: welcomeError } = await resend.emails.send({
+        from: emailFrom,
+        to: [email],
+        subject: "You're on the TheoSheets founding list",
+        html,
+        idempotencyKey: `${idempotencyKey}-welcome`,
+      });
+
+      if (welcomeError) {
+        console.error('Welcome email failed:', JSON.stringify(welcomeError, null, 2));
+      }
+    } catch (err) {
+      console.error('Welcome email failed:', err);
+    }
+  } else if (isNew) {
+    console.warn('Skipping welcome email: RESEND_API_KEY or EMAIL_FROM is not configured');
+  }
+
+  return res.status(200).json({ success: true, isNew });
 }
 
 function escapeHtml(str) {
@@ -147,4 +202,20 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function normalizeEmail(email) {
+  return String(email).trim().toLowerCase();
+}
+
+function getSubscriberKey(email) {
+  return `theosheets:subscriber:${email}`;
+}
+
+function parseStoredSubscriber(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }

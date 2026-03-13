@@ -4,9 +4,12 @@
 
 ```
 /
-├── index.html          # Landing page
+├── index.html           # Landing page
+├── welcome-email.html   # Welcome email template (founding list)
 ├── api/
-│   └── subscribe.js   # Email signup serverless function
+│   ├── subscribe.mjs    # Email signup serverless function
+│   ├── unsubscribe.mjs  # Unsubscribe handler (GET ?token=xxx)
+│   └── subscriber-count.mjs
 ├── package.json
 └── DEPLOYMENT.md
 ```
@@ -22,6 +25,7 @@ Configure these in your Vercel project (Settings → Environment Variables):
 | `EMAIL_TO` | Your email for new subscriber notifications | `you@yourdomain.com` |
 | `UPSTASH_REDIS_REST_URL` | Upstash Redis URL (for live subscriber count) | `https://xxx.upstash.io` |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token | `AXxx...` |
+| `LANDING_URL` | Full URL of the landing page (for unsubscribe links) | `https://theosheets.com` |
 
 **Note:** Without Upstash Redis, the progress indicator shows a static fallback (84/300). To enable live counting, create a free [Upstash Redis](https://upstash.com) database and add the credentials.
 
